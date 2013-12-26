@@ -49,6 +49,17 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
     final Option<P2<K, Option<V>>> x = tree.split(P.p(k, Option.<V>none()))._2();
     return x.bind(P2.<K, Option<V>>__2());
   }
+  
+  /**
+   * Returns a value, taken from the map or the specified default.
+   *
+   * @param k The key to look up in the tree map.
+   * @param d The default value to use in case the key does not exist in the map.
+   * @return A value for the given key.
+   */
+  public V getOrSome(final K k, final V d) {
+    return get(k).orSome(d);
+  }
 
   /**
    * Inserts the given key and value association into the tree map.
@@ -109,6 +120,26 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
   public List<K> keys() {
     return tree.toList().map(P2.<K, Option<V>>__1());
   }
+  
+  /**
+   * Converts this map into a list of tuples.
+   *
+   * @return This map, as a List of tuples.
+   */
+  public final List<P2<K, V>> toList() {
+    List.Buffer<P2<K, V>> buffer = new List.Buffer<P2<K, V>>();
+    
+    for (P2<K, Option<V>> kv : tree) {
+      K k = kv._1();
+      Option<V> ov = kv._2();
+      
+      if (ov.isSome()) {
+        buffer.snoc(P.p(k, ov.toNull()));
+      }
+    }
+    
+    return buffer.toList();
+  }
 
   /**
    * Determines if the given key value exists in this tree map.
@@ -127,8 +158,7 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
    * @return A iterator for this map's key-value pairs.
    */
   public Iterator<P2<K, V>> iterator() {
-    return join(tree.toStream().map(P2.<K, Option<V>, IterableW<V>>map2_(IterableW.<V, Option<V>>wrap())
-    ).map(P2.tuple(compose(IterableW.<V, P2<K, V>>map(), P.<K, V>p2())))).iterator();
+    return toList().iterator();
   }
 
   /**

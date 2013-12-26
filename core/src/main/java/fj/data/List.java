@@ -1276,6 +1276,61 @@ public abstract class List<A> implements Iterable<A> {
   public final A minimum(final Ord<A> o) {
     return foldLeft1(o.min);
   }
+  
+  /**
+   * Partitions the list into two sublits, those satisfying and those not 
+   * satisfying the given predicate.
+   *
+   * @param f The predicate.
+   * @return The partition in a tuple.
+   */
+  public final P2<List<A>, List<A>> partition(F<A, Boolean> f) {
+    Buffer<A> p1 = empty();
+    Buffer<A> p2 = empty();
+    
+    for (A x : this) {
+      if (f.f(x)) p1.snoc(x);
+      else p2.snoc(x);
+    }
+    
+    return p(p1.toList(), p2.toList());
+  }
+
+  /**
+   * Groups the elements in this list into a map by a user-supplied projection.
+   *
+   * @param f The projection.
+   * @param o The ordering on the projection.
+   * @return A map containing the grouped elements.
+   */
+  public final <B> TreeMap<B, List<A>> groupBy(F<A, B> f, Ord<B> o) {
+    java.util.Map<B, List<A>> map = new java.util.HashMap<B, List<A>>();
+    
+    List<A> emptyList = List.<A>nil();
+    
+    for (A x : this) {
+      B key = f.f(x);
+      
+      List<A> value = map.get(key);
+      
+      if (value == null) value = emptyList;
+      
+      map.put(key, value.cons(x));
+    }
+    
+    return TreeMap.fromMutableMap(o, map);
+  }
+  
+  /**
+   * Groups the elements in this list into a map by a user-supplied projection.
+   *
+   * @param f The projection.
+   * @param o The ordering on the projection.
+   * @return A map containing the grouped elements.
+   */
+  public final <B> TreeMap<B, List<A>> groupBy(F<A, B> f) {
+    return groupBy(f, Ord.<B>hashEqualsOrd());
+  }
 
   /**
    * Projects an immutable collection of this list.
